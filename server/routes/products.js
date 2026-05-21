@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
+
+// Your New Constant Import
+const { LOW_STOCK_THRESHOLD } = require('../config/constants');
+
+// Parth's New Security & Validation Imports
 const verifyFirebaseToken = require('../middleware/verifyFirebaseToken');
 const verifyAdmin = require('../middleware/verifyAdmin');
 const validateRequest = require('../middleware/validateRequest');
@@ -45,8 +50,6 @@ router.get('/', async (req, res) => {
  * @desc    Returns all products where available stock (stock - reserved) is below threshold of 5
  * @access  Public
  */
-// GET /api/products/low-stock - get products with low stock
-const LOW_STOCK_THRESHOLD = 5;
 
 router.get('/low-stock', async (req, res) => {
   try {
