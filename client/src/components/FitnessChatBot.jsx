@@ -14,8 +14,10 @@ export default function FitnessChatBot() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [announcement, setAnnouncement] = useState("");
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const fabRef = useRef(null);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 120);
@@ -25,6 +27,15 @@ export default function FitnessChatBot() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs, typing]);
+
+  useEffect(() => {
+    const latestMessage = msgs[msgs.length - 1];
+    if (!latestMessage || latestMessage.role !== "bot" || msgs.length === 1) return;
+
+    setAnnouncement(
+      `Fitness assistant: ${latestMessage.text.replace(/\*\*|__/g, "")}`,
+    );
+  }, [msgs]);
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 200);
@@ -73,6 +84,18 @@ export default function FitnessChatBot() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       send();
+    }
+  };
+
+  const closeChat = () => {
+    setOpen(false);
+    window.requestAnimationFrame(() => fabRef.current?.focus());
+  };
+
+  const onChatKeyDown = (e) => {
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      closeChat();
     }
   };
 
@@ -172,6 +195,12 @@ export default function FitnessChatBot() {
       {/* ── Chat Window ── */}
       {/* Full-screen on mobile, fixed-size floating window on sm+ */}
       <div
+        id="fitness-chatbot-dialog"
+        role="dialog"
+        aria-labelledby="fitness-chatbot-title"
+        aria-hidden={!open}
+        inert={!open ? true : undefined}
+        onKeyDown={onChatKeyDown}
         className={`fm-chat-window fixed z-50 bg-white border border-stone-200
                     shadow-2xl flex flex-col overflow-hidden
                     /* Mobile: full screen minus FAB area */
@@ -194,6 +223,7 @@ export default function FitnessChatBot() {
               FitMart
             </p>
             <h3
+              id="fitness-chatbot-title"
               style={{ fontFamily: "'DM Serif Display', serif" }}
               className="text-white text-base sm:text-lg leading-tight"
             >
@@ -206,11 +236,12 @@ export default function FitnessChatBot() {
               Online
             </span>
             <button
-              onClick={() => setOpen(false)}
+              type="button"
+              onClick={closeChat}
               className="text-stone-400 hover:text-white transition-colors text-2xl
                          leading-none min-w-9 min-h-9 flex items-center
                          justify-center rounded-full hover:bg-white/10"
-              aria-label="Close chat"
+              aria-label="Close fitness assistant"
             >
               ×
             </button>
@@ -218,16 +249,27 @@ export default function FitnessChatBot() {
         </div>
 
         {/* ── Messages Area ── */}
-        <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-5 space-y-3
-                        fm-scrollbar bg-stone-50">
+        <div
+          id="fitness-chatbot-messages"
+          role="log"
+          aria-label="Fitness assistant chat history"
+          aria-live="off"
+          aria-relevant="additions text"
+          tabIndex={0}
+          className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-5 space-y-3
+                        fm-scrollbar bg-stone-50"
+        >
           {msgs.map((msg, idx) => (
             <div
               key={idx}
+              role="article"
+              aria-label={`${msg.role === "user" ? "You" : "Fitness assistant"}: ${msg.text.replace(/\*\*|__/g, "")}`}
               className={`fm-msg flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               {msg.role === "bot" && (
                 <div className="w-7 h-7 rounded-full bg-stone-900 flex items-center
-                                justify-center text-white text-xs shrink-0 mr-2 mt-0.5">
+                                justify-center text-white text-xs shrink-0 mr-2 mt-0.5"
+                  aria-hidden="true">
                   ◎
                 </div>
               )}
@@ -248,16 +290,23 @@ export default function FitnessChatBot() {
 
           {/* Typing Indicator */}
           {typing && (
-            <div className="fm-msg flex justify-start">
+            <div
+              className="fm-msg flex justify-start"
+              role="status"
+              aria-live="polite"
+              aria-label="Fitness assistant is typing"
+            >
               <div className="w-7 h-7 rounded-full bg-stone-900 flex items-center
-                              justify-center text-white text-xs shrink-0 mr-2 mt-0.5">
+                              justify-center text-white text-xs shrink-0 mr-2 mt-0.5"
+                aria-hidden="true">
                 ◎
               </div>
               <div className="bg-white border border-stone-200 rounded-2xl rounded-bl-sm
                               px-4 py-3 flex items-center gap-1.5 shadow-sm">
-                <span className="fm-dot w-1.5 h-1.5 rounded-full bg-stone-400 inline-block" />
-                <span className="fm-dot w-1.5 h-1.5 rounded-full bg-stone-400 inline-block" />
-                <span className="fm-dot w-1.5 h-1.5 rounded-full bg-stone-400 inline-block" />
+                <span className="sr-only">Fitness assistant is typing</span>
+                <span className="fm-dot w-1.5 h-1.5 rounded-full bg-stone-400 inline-block" aria-hidden="true" />
+                <span className="fm-dot w-1.5 h-1.5 rounded-full bg-stone-400 inline-block" aria-hidden="true" />
+                <span className="fm-dot w-1.5 h-1.5 rounded-full bg-stone-400 inline-block" aria-hidden="true" />
               </div>
             </div>
           )}
@@ -265,10 +314,17 @@ export default function FitnessChatBot() {
           <div ref={bottomRef} />
         </div>
 
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {announcement}
+        </div>
+
         <div className="h-px bg-stone-100 shrink-0" />
 
         {/* ── Input Area ── */}
         <div className="px-3 sm:px-4 py-2.5 sm:py-3 bg-white flex items-end gap-2 shrink-0">
+          <p id="fitness-chatbot-input-help" className="sr-only">
+            Type your message. Press Enter to send, or Shift and Enter for a new line.
+          </p>
           <textarea
             ref={inputRef}
             rows={1}
@@ -277,6 +333,8 @@ export default function FitnessChatBot() {
             onKeyDown={onKeyDown}
             placeholder="Ask about workouts, diet, protein…"
             disabled={typing}
+            aria-label="Ask the fitness assistant"
+            aria-describedby="fitness-chatbot-input-help"
             className="flex-1 resize-none border border-stone-200 bg-stone-50 rounded-xl
                        px-3.5 sm:px-4 py-2.5 text-sm text-stone-900 placeholder-stone-300
                        focus:outline-none focus:border-stone-900 transition-colors
@@ -288,6 +346,7 @@ export default function FitnessChatBot() {
             }}
           />
           <button
+            type="button"
             onClick={send}
             disabled={!input.trim() || typing}
             className="w-10 h-10 sm:w-9 sm:h-9 bg-stone-900 text-white rounded-full
@@ -298,7 +357,7 @@ export default function FitnessChatBot() {
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-              strokeLinejoin="round">
+              strokeLinejoin="round" aria-hidden="true" focusable="false">
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
@@ -308,22 +367,27 @@ export default function FitnessChatBot() {
 
       {/* ── FAB ── */}
       <button
+        ref={fabRef}
+        type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={`fm-fab fixed bottom-5 right-5 z-50 w-14 h-14 bg-stone-900 text-white
                     rounded-full shadow-lg flex items-center justify-center
                     transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
-        aria-label="Toggle fitness assistant"
+        aria-label={open ? "Close fitness assistant" : "Open fitness assistant"}
+        aria-expanded={open}
+        aria-controls="fitness-chatbot-dialog"
       >
         {open ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+            aria-hidden="true" focusable="false">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         ) : (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-            strokeLinejoin="round">
+            strokeLinejoin="round" aria-hidden="true" focusable="false">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         )}
