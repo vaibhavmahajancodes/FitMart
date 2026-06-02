@@ -17,16 +17,16 @@ export default function Checkout() {
   const navigate = useNavigate();
   const abortRef = useRef(null);
 
-  const [items, setItems]                   = useState([]);
-  const [loadingCart, setLoadingCart]       = useState(true);
+  const [items, setItems] = useState([]);
+  const [loadingCart, setLoadingCart] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [cartError, setCartError]           = useState(null);
-  const [profileError, setProfileError]     = useState(null);
+  const [cartError, setCartError] = useState(null);
+  const [profileError, setProfileError] = useState(null);
   const [discountEligible, setDiscountEligible] = useState(false);
-  const [discountPercent, setDiscountPercent]   = useState(10);
-  const [profile, setProfile]               = useState(null);
+  const [discountPercent, setDiscountPercent] = useState(10);
+  const [profile, setProfile] = useState(null);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [menuOpen, setMenuOpen]             = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => { document.title = "My Cart - FitMart"; }, []);
 
@@ -46,16 +46,17 @@ export default function Checkout() {
       try {
         const headers = await getAuthHeaders();
 
-        const [cartRes, prodRes, discountRes] = await Promise.all([
-          fetch(`${API}/api/cart/${userId}`, { headers, credentials: "include", signal }),
-          fetch(`${API}/api/products`, { signal }),
-          fetch(`${API}/api/user/discount-status/${userId}`, { credentials: "include", signal }),
+        const [cartRes, prodRes, discountRes, profileRes] = await Promise.all([
+          fetch(`${API}/api/cart/${userId}`, { headers, credentials: "include" }),
+          fetch(`${API}/api/products?all=true`),
+          fetch(`${API}/api/user/discount-status/${userId}`, { credentials: "include" }),
+          fetch(`${API}/api/user/profile/${userId}`, { headers, credentials: "include" }),
         ]);
 
         if (!cartRes.ok) throw new Error("Failed to fetch cart");
         if (!prodRes.ok) throw new Error("Failed to fetch products");
 
-        const cart     = await cartRes.json();
+        const cart = await cartRes.json();
         const products = await prodRes.json();
 
         if (discountRes.ok) {
@@ -66,7 +67,7 @@ export default function Checkout() {
 
         if (cart.items?.length) {
           const productMap = Object.fromEntries(products.map(p => [p.productId, p]));
-          const enriched   = cart.items
+          const enriched = cart.items
             .map(item => ({ ...item, product: productMap[item.productId] }))
             .filter(item => item.product);
           setItems(enriched);
@@ -83,7 +84,7 @@ export default function Checkout() {
       setProfileError(null);
 
       try {
-        const headers   = await getAuthHeaders();
+        const headers = await getAuthHeaders();
         const profileRes = await fetch(`${API}/api/user/profile/${userId}`, {
           headers, credentials: "include", signal,
         });
@@ -110,9 +111,9 @@ export default function Checkout() {
     };
   }, [navigate]);
 
-  const subtotal    = items.reduce((sum, { product, quantity }) => sum + product.price * quantity, 0);
+  const subtotal = items.reduce((sum, { product, quantity }) => sum + product.price * quantity, 0);
   const discountAmt = discountEligible ? Math.round(subtotal * discountPercent / 100) : 0;
-  const total       = subtotal - discountAmt;
+  const total = subtotal - discountAmt;
 
   const handleProceed = () => {
     navigate("/payment", {
@@ -240,9 +241,9 @@ export default function Checkout() {
                              font-medium min-h-12 focus:outline-none focus:ring-2
                              focus:ring-white focus:ring-offset-2 focus:ring-offset-stone-900
                              ${selectedAddress
-                               ? 'bg-white text-stone-900 hover:bg-stone-100 cursor-pointer'
-                               : 'bg-stone-700 text-stone-500 cursor-not-allowed'
-                             }`}
+                      ? 'bg-white text-stone-900 hover:bg-stone-100 cursor-pointer'
+                      : 'bg-stone-700 text-stone-500 cursor-not-allowed'
+                    }`}
                 >
                   Proceed to Payment →
                 </button>
