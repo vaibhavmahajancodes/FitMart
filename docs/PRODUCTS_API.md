@@ -2,7 +2,7 @@
 
 GET /api/products
 
-Query parameters
+Query parameters:-
 - `page` (number) — page number (default: 1)
 - `limit` (number) — items per page (default: 24)
 - `category` (string) — filter by category (e.g., `Nutrition`)
@@ -21,25 +21,25 @@ Response shape
 }
 ```
 
-Headers
+Headers:-
 - `X-Total-Count`: total matching items
 - `ETag`: ETag for conditional requests
 - `Link`: RFC5988 pagination links
 - `X-Cache`: `HIT` or `MISS`
 
-Cache strategy
+Cache strategy:-
 - Results are cached by query params. Cache key is an MD5 hash of the query.
 - TTL configurable via `PRODUCTS_CACHE_TTL` (seconds; default 60).
 - Redis is used when `REDIS_URL`/`REDIS_HOST` is configured; otherwise an in-memory Map fallback is used.
 
-Invalidation
+Invalidation:-
 - Cache is cleared on product create/update/delete and after seed operations. This is a conservative invalidation strategy to ensure consistency.
 
-Compatibility
+Compatibility:-
 - Previously the API returned all products by default. To retain compatibility you can call `?all=true` but pagination is recommended.
 
-ETag / Conditional Requests
+ETag / Conditional Requests:-
 - The API sets an `ETag` header and responds with `304 Not Modified` when the `If-None-Match` matches.
 
-Examples
+Examples:-
 - `/api/products?page=1&limit=24&category=Equipment&search=protein&sort=price_asc`
