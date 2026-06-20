@@ -79,7 +79,7 @@ services:
       args:
         # Vite bakes these into the JS bundle at build time.
         # Override with your own values via a .env file or --build-arg flags.
-        VITE_API_URL: http://localhost:5000
+        VITE_API_URL: http://localhost:5000    #By Default
         VITE_RAZORPAY_KEY_ID: ${VITE_RAZORPAY_KEY_ID:-}
         VITE_ADMIN_UID: ${VITE_ADMIN_UID:-}
         VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-}
