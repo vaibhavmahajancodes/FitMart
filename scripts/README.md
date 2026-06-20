@@ -4,7 +4,7 @@ This folder contains helper scripts designed to simplify and automate the pull r
 
 These scripts are especially useful for maintainers who prefer reviewing pull requests locally and performing local merges instead of using GitHub's web-based merge options.
 
-The workflow helps with:
+The workflow helps with:-
 
 * Faster PR review and merging
 * Maintaining a clean Git history
@@ -40,7 +40,7 @@ This allows maintainers to:
 * Test functionality
 * Inspect changes properly before merging
 
-### Example Workflow
+### Example Workflow:-
 
 Running:
 
